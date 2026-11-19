@@ -1,5 +1,9 @@
 # sqlitefuse
 
+[![CI](https://github.com/joaquin-rossi/sqlitefuse/actions/workflows/ci.yml/badge.svg)](https://github.com/joaquin-rossi/sqlitefuse/actions/workflows/ci.yml)
+
+[![crates.io](https://img.shields.io/crates/v/sqlitefuse)](https://crates.io/crates/sqlitefuse)
+
 A read-only FUSE filesystem that shows an SQLite database as a directory: every
 table and view is a JSONL file with one JSON row per line. Use `cat`, `grep`,
 `jq`, `wc`, `diff` or `rsync` on your data without writing SQL.
