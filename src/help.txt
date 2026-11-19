@@ -1,0 +1,54 @@
+MOUNT OPTIONS:
+  Given with -o, separated by commas.
+
+  - lock: in rollback journal mode, block writers while a file is open, so
+    reads never fail.
+  - immutable: for databases that never change (read-only media, backups):
+    no locking and no change checks.
+  - uid=N, gid=N: owner of the files (default: the user who mounts).
+  - allow_other, allow_root: let other users, or root, see the mount.
+  - debug: same as -d.
+  - max_value=SIZE: largest TEXT or BLOB value, and largest JSON line, that
+    is read (default 256M). A table with a larger one fails to read with
+    EFBIG.
+  - max_view=SIZE: largest view, in JSON bytes, that is computed or opened
+    (default 1G). Larger views fail with EFBIG.
+
+  SIZE takes the suffixes K, M and G. Options that mount(8) passes from
+  fstab (ro, defaults, noatime, nofail, ...) are accepted and change
+  nothing.
+
+FILES:
+  Each table and view is NAME.jsonl, with one JSON object per row and keys
+  in column order. Internal tables (sqlite_schema, sqlite_sequence,
+  sqlite_stat*, and the tables behind full-text indexes) are hidden files,
+  like .sqlite_sequence.jsonl. Virtual tables are not shown. In names, / is
+  written %2F, % is %25 and a leading . is %2E.
+
+  Rows come out in the same order every time: regular tables by rowid,
+  WITHOUT ROWID tables by primary key, views by all columns.
+
+  Details about each table are in extended attributes (getfattr -d):
+  user.sqlite.sql, user.sqlite.kind, user.sqlite.columns,
+  user.sqlite.indexes, user.sqlite.foreign_keys, user.sqlite.triggers,
+  user.sqlite.rows and user.sqlite.order.
+
+WHEN THE DATABASE CHANGES:
+  An open file never mixes data from before and after a write. In WAL mode
+  it keeps showing the data as it was when it was opened. In rollback mode
+  (SQLite's default), a read fails with EIO if someone writes in the
+  meantime, unless -o lock is given.
+
+LOGGING:
+  Messages go to stderr until sqlitefuse goes to the background, and to
+  syslog afterwards (journalctl -t sqlitefuse). With -f they always go to
+  stderr.
+
+EXAMPLES:
+      sqlitefuse sales.db /mnt/sales
+      jq -c 'select(.country == "AR")' /mnt/sales/customers.jsonl
+      fusermount -u /mnt/sales
+
+  To mount at boot, in /etc/fstab:
+
+      /srv/data/sales.db  /mnt/sales  fuse.sqlitefuse  ro,allow_other  0 0
